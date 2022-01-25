@@ -66,7 +66,7 @@ sumOfSquares x y = x * x + y * y
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
 lastDigit :: Int -> Int
-lastDigit n = mod (abs n) 10
+lastDigit n = abs n `mod` 10
 
 {- | Write a function that takes three numbers and returns the
 difference between the biggest number and the smallest one.
@@ -82,9 +82,9 @@ function.
 -}
 minmax :: Int -> Int -> Int -> Int
 minmax x y z =
-  let maxNum a b c = max a (max b c)
-      minNum a b c = min a (min b c)
-   in maxNum x y z - minNum x y z
+  let maxNum = max x (max y z)
+      minNum = min x (min y z)
+   in maxNum - minNum
 
 {- | Implement a function that takes a string, start and end positions
 and returns a substring of a given string from the start position to
@@ -103,7 +103,7 @@ string.
 -}
 subString :: Int -> Int -> [Char] -> [Char]
 subString start end str =
-    let newStart = if start < 0 then 0 else start
+    let newStart = max 0 start
     in
         if newStart > end
             then ""
@@ -118,7 +118,7 @@ and finds a sum of the numbers inside this string.
 The string contains only spaces and/or numbers.
 -}
 strSum :: [Char] -> Int
-strSum str = sum (map (\x -> read x :: Int) (words str))
+strSum str = sum (map read (words str))
 
 {- | Write a function that takes a number and a list of numbers and
 returns a string, saying how many elements of the list are strictly
@@ -135,15 +135,23 @@ and lower than 6 elements (4, 5, 6, 7, 8 and 9).
 -}
 lowerAndGreater :: Int -> [Int] -> [Char]
 lowerAndGreater n list =
-  let lower = show (count n list (<))
-      greater = show (count n list (>))
-   in show n ++ " is greater than " ++ greater ++ " elements and lower than " ++ lower ++ " elements"
+  let result = counts n list
+      lower = fst result
+      greater = snd result
+   in show n ++ " is greater than " ++ show greater ++ " elements and lower than " ++ show lower ++ " elements"
 
-count :: Int -> [Int] -> (Int -> Int -> Bool) -> Int
-count n list fn = go 0 list
+counts :: Int -> [Int] -> (Int, Int)
+counts n = go (0,0)
   where
-    go :: Int -> [Int] -> Int
+    go :: (Int, Int) -> [Int] -> (Int, Int)
     go result l
       | null l = result
-      | fn n (head l) = go (result + 1) (tail l)
+      | n < head l = go (incrementLower result) (tail l)
+      | n > head l = go (incrementGreater result) (tail l)
       | otherwise = go result (tail l)
+
+incrementLower :: (Int, Int) -> (Int, Int)
+incrementLower (a,b) = (a + 1, b)
+
+incrementGreater :: (Int, Int) -> (Int, Int)
+incrementGreater (a, b) = (a, b + 1)
